@@ -108,6 +108,12 @@ def err(msg, code=400):
     return jsonify({'message': msg}), code
 
 
+# ==================== 健康检查 ====================
+@app.route('/api/health', methods=['GET'])
+def health():
+    return ok({'status': 'ok'})
+
+
 # ==================== 认证接口 ====================
 @app.route('/api/auth/login', methods=['POST'])
 def login():
