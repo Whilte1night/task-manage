@@ -5,7 +5,7 @@ const { ElMessage, ElMessageBox } = ElementPlus;
 /* ==================== API 请求封装 ====================
    所有请求都经过这个函数，自动带上 JWT Token
    ================================================== */
-const API_BASE = 'http://localhost:5000';
+const API_BASE = 'https://task-manage-production.up.railway.app';
 
 async function request(method, path, body = null) {
   const token = localStorage.getItem('tf_token');
