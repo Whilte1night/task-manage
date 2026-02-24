@@ -144,7 +144,10 @@ const LoginPage = {
 
     onMounted(async () => {
       try {
-        const res = await fetch(API_BASE + '/api/auth/me', { signal: AbortSignal.timeout(3000) });
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(API_BASE + '/api/auth/me', { signal: controller.signal });
+        clearTimeout(timer);
         // 任何有效 HTTP 响应（包括 401）都说明后端在线
         apiStatus.value = 'online';
       } catch {
