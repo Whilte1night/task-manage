@@ -302,14 +302,56 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Sego
    响应式
    =========================== */
 @media (max-width: 768px) {
+  /* 侧边栏在平板上缩小 */
+  .sidebar { width: 64px !important; }
+  .sidebar .nav-label, .sidebar .nav-count, .sidebar .cat-count-badge, .sidebar .cat-del-btn { display: none !important; }
+  .sidebar-footer { flex-direction: column; padding: 10px; }
+  .sidebar-footer .user-meta { display: none; }
+  
+  /* 顶部栏 */
   .topbar { padding: 0 12px; }
   .topbar-right .el-input { width: 150px !important; }
+  .page-title { font-size: 16px; }
+  
+  /* 统计卡片 */
   .stats-row { padding: 12px 12px 0; }
+  .stat-card { margin-bottom: 10px; }
+  .stat-num { font-size: 24px; }
+  
+  /* 任务列表 */
   .filter-bar, .task-list { padding-left: 12px; padding-right: 12px; }
   .task-actions { opacity: 1 !important; }
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  .filter-left { margin-bottom: 10px; }
 }
 
 @media (max-width: 480px) {
+  /* 手机端隐藏侧边栏 */
+  .sidebar { display: none; }
+  
+  /* 顶部栏 */
   .topbar-right .el-input { display: none; }
+  .topbar-right { gap: 5px; }
+  .topbar-right .el-button span { display: none; }
+  
+  /* 登录页 */
   .login-card .el-card__body { padding: 32px 24px; }
+  .logo-text { font-size: 22px; }
+  
+  /* 统计卡片 */
+  .stat-card { padding: 12px; }
+  .stat-num { font-size: 20px; }
+  .stat-label { font-size: 12px; }
+  
+  /* 任务卡片 */
+  .task-card .el-card__body { padding: 12px; }
+  .task-title { font-size: 14px; }
+  .task-desc { font-size: 12px; }
+  .task-tags { gap: 4px; }
+  .task-tags .el-tag { font-size: 11px; padding: 0 6px; }
+  
+  /* 筛选栏 */
+  .filter-bar { padding: 12px 12px 8px; }
+  .filter-left button { font-size: 12px; padding: 5px 10px; }
 }
+
