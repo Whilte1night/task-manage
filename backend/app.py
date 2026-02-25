@@ -36,12 +36,31 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # 生产环境请设置 JWT_SECRET_KEY 环境变量，本地开发保留默认值
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'taskflow-super-secret-2024')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
+# JWT 配置：禁用 CSRF 保护（前后端分离不需要）
+app.config['JWT_COOKIE_CSRF_PROTECT'] = False
+app.config['JWT_CSRF_CHECK_FORM'] = False
 
 db  = SQLAlchemy(app)
 jwt = JWTManager(app)
 
 # 允许跨域（前后端分离必须配置）
-CORS(app, resources={r'/api/*': {'origins': '*'}})
+CORS(app, resources={
+    r'/api/*': {
+        'origins': '*',
+        'methods': ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        'allow_headers': ['Content-Type', 'Authorization'],
+        'expose_headers': ['Content-Type', 'Authorization'],
+        'supports_credentials': False
+    }
+})
+
+# 手动处理 OPTIONS 请求
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 
 # ==================== 数据模型 ====================
@@ -301,17 +320,20 @@ def delete_category(cat_id):
 # ==================== 初始化数据库（gunicorn 也能执行到） ====================
 def init_db():
     with app.app_context():
-        db.create_all()
-        if not User.query.filter_by(username='admin').first():
-            admin = User(
-                username      = 'admin',
-                password_hash = generate_password_hash('admin123')
-            )
-            db.session.add(admin)
-            for c in [('工作','#6366f1'), ('个人','#22c55e'), ('学习','#f59e0b'), ('健康','#ef4444')]:
-                db.session.add(Category(user=admin, name=c[0], color=c[1]))
-            db.session.commit()
-            print('[OK] 默认账号已创建：admin / admin123')
+        try:
+            db.create_all()
+            if not User.query.filter_by(username='admin').first():
+                admin = User(
+                    username      = 'admin',
+                    password_hash = generate_password_hash('admin123')
+                )
+                db.session.add(admin)
+                for c in [('工作','#6366f1'), ('个人','#22c55e'), ('学习','#f59e0b'), ('健康','#ef4444')]:
+                    db.session.add(Category(user=admin, name=c[0], color=c[1]))
+                db.session.commit()
+                print('[OK] 默认账号已创建：admin / admin123')
+        except Exception as e:
+            print(f'[ERROR] 数据库初始化失败: {e}')
 
 init_db()
 

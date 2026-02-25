@@ -27,7 +27,10 @@ async function request(method, path, body = null) {
   }
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || '请求失败');
+  if (!res.ok) {
+    console.error(`请求失败: ${method} ${path}`, data);
+    throw new Error(data.message || `请求失败: ${method} ${path}`);
+  }
   return data;
 }
 
