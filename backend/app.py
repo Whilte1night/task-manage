@@ -147,7 +147,7 @@ def login():
     if not user or not check_password_hash(user.password_hash, password):
         return err('用户名或密码错误', 401)
 
-    token = create_access_token(identity=user.id)
+    token = create_access_token(identity=str(user.id))
     return ok({'token': token, 'username': user.username})
 
 
@@ -174,7 +174,7 @@ def register():
         db.session.add(Category(user=user, name=c[0], color=c[1]))
 
     db.session.commit()
-    token = create_access_token(identity=user.id)
+    token = create_access_token(identity=str(user.id))
     return ok({'token': token, 'username': user.username}, 201)
 
 
@@ -189,7 +189,7 @@ def me():
 @app.route('/api/tasks', methods=['GET'])
 @jwt_required()
 def get_tasks():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     tasks = Task.query.filter_by(user_id=user_id)\
                       .order_by(Task.created_at.desc()).all()
     return ok([t.to_dict() for t in tasks])
@@ -198,7 +198,7 @@ def get_tasks():
 @app.route('/api/tasks', methods=['POST'])
 @jwt_required()
 def create_task():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     data    = request.get_json() or {}
     title   = data.get('title', '').strip()
 
@@ -222,7 +222,7 @@ def create_task():
 @app.route('/api/tasks/<int:task_id>', methods=['PUT'])
 @jwt_required()
 def update_task(task_id):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     task    = Task.query.filter_by(id=task_id, user_id=user_id).first()
     if not task:
         return err('任务不存在', 404)
@@ -242,7 +242,7 @@ def update_task(task_id):
 @app.route('/api/tasks/<int:task_id>', methods=['DELETE'])
 @jwt_required()
 def delete_task(task_id):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     task    = Task.query.filter_by(id=task_id, user_id=user_id).first()
     if not task:
         return err('任务不存在', 404)
@@ -256,7 +256,7 @@ def delete_task(task_id):
 @app.route('/api/categories', methods=['GET'])
 @jwt_required()
 def get_categories():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     cats = Category.query.filter_by(user_id=user_id).all()
     return ok([c.to_dict() for c in cats])
 
@@ -264,7 +264,7 @@ def get_categories():
 @app.route('/api/categories', methods=['POST'])
 @jwt_required()
 def create_category():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     data    = request.get_json() or {}
     name    = data.get('name', '').strip()
 
@@ -282,7 +282,7 @@ def create_category():
 @app.route('/api/categories/<int:cat_id>', methods=['PUT'])
 @jwt_required()
 def update_category(cat_id):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     cat     = Category.query.filter_by(id=cat_id, user_id=user_id).first()
     if not cat:
         return err('分类不存在', 404)
@@ -305,7 +305,7 @@ def update_category(cat_id):
 @app.route('/api/categories/<int:cat_id>', methods=['DELETE'])
 @jwt_required()
 def delete_category(cat_id):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     cat     = Category.query.filter_by(id=cat_id, user_id=user_id).first()
     if not cat:
         return err('分类不存在', 404)
