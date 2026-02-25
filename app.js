@@ -271,7 +271,7 @@ const TasksPage = {
     <el-container class="app-layout" v-loading="pageLoading" element-loading-text="加载中...">
 
       <!-- 侧边栏 -->
-      <el-aside :width="collapsed ? '64px' : '240px'" class="sidebar">
+      <el-aside :width="collapsed ? '64px' : '240px'" class="sidebar" :class="{ show: sidebarShow }">
         <div class="sidebar-top">
           <div class="logo-row">
             <div class="logo-mark" :class="{ sm: collapsed }">
@@ -337,13 +337,16 @@ const TasksPage = {
         </div>
       </el-aside>
 
+      <!-- 移动端遮罩层 -->
+      <div class="sidebar-overlay" :class="{ show: sidebarShow }" @click="sidebarShow=false"></div>
+
       <!-- 右侧 -->
       <el-container style="overflow:hidden;flex-direction:column;">
         <!-- 顶部栏 -->
         <el-header class="topbar" height="64px">
           <div class="topbar-left">
-            <el-button text circle @click="collapsed=!collapsed" class="collapse-btn">
-              <el-icon :size="20"><Fold v-if="!collapsed" /><Expand v-else /></el-icon>
+            <el-button text circle @click="toggleSidebar" class="collapse-btn">
+              <el-icon :size="20"><Operation /></el-icon>
             </el-button>
             <h2 class="page-title">{{ pageTitle }}</h2>
           </div>
@@ -538,12 +541,23 @@ const TasksPage = {
 
     /* ----- 布局 ----- */
     const collapsed = ref(false);
+    const sidebarShow = ref(false);
+    const toggleSidebar = () => {
+      if (window.innerWidth <= 480) {
+        sidebarShow.value = !sidebarShow.value;
+      } else {
+        collapsed.value = !collapsed.value;
+      }
+    };
     const filter    = ref('all');
     const priorityF = ref('all');
     const sortBy    = ref('created_desc');
     const searchQ   = ref('');
 
-    const setFilter  = (f) => { filter.value = f; };
+    const setFilter  = (f) => { 
+      filter.value = f; 
+      if (window.innerWidth <= 480) sidebarShow.value = false; // 手机端选择后自动关闭侧边栏
+    };
     const pageTitle  = computed(() => {
       const map = { all:'全部任务', today:'今日任务', pending:'待完成', done:'已完成' };
       const cat = categories.value.find(c => c.id === filter.value);
@@ -706,7 +720,7 @@ const TasksPage = {
     onUnmounted(() => document.removeEventListener('keydown', onKey));
 
     return {
-      username, pageLoading, saving, isDark, collapsed, filter, priorityF, sortBy, searchQ,
+      username, pageLoading, saving, isDark, collapsed, sidebarShow, toggleSidebar, filter, priorityF, sortBy, searchQ,
       tasks, categories, navItems, pageTitle, statsCards, visibleTasks, pOpts, COLORS,
       PRIORITY_TYPE, PRIORITY_LABEL,
       setFilter, toggleTheme, getCat, toggleTaskApi, confirmDeleteTask, logout, fmtDate, isOverdue, isSoon,
