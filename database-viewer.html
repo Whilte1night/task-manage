@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数据库查看器 - TaskFlow</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #6366f1;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #6366f1;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #333;
+    }
+    tr:hover {
+      background: #f8f9fa;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+    .badge-info { background: #dbeafe; color: #1e40af; }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    button:hover {
+      background: #4f46e5;
+    }
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗄️ TaskFlow 数据库查看器</h1>
+    <p class="subtitle">实时查看 Railway 数据库中的所有数据</p>
+    
+    <button onclick="loadData()">🔄 刷新数据</button>
+    
+    <div id="content">
+      <div class="loading">正在加载数据...</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://task-manage-production.up.railway.app';
+
+    async function loadData() {
+      const content = document.getElementById('content');
+      content.innerHTML = '<div class="loading">正在加载数据...</div>';
+
+      try {
+        const res = await fetch(API_BASE + '/api/debug/database');
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || '加载失败');
+        }
+
+        renderData(data);
+      } catch (e) {
+        content.innerHTML = `<div class="error">❌ 加载失败: ${e.message}</div>`;
+      }
+    }
+
+    function renderData(data) {
+      const content = document.getElementById('content');
+      
+      let html = `
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-number">${data.total.users}</div>
+            <div class="stat-label">用户总数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${data.total.tasks}</div>
+            <div class="stat-label">任务总数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${data.total.categories}</div>
+            <div class="stat-label">分类总数</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">👥 用户列表</div>
+          ${data.users.length > 0 ? `
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>用户名</th>
+                  <th>创建时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.users.map(u => `
+                  <tr>
+                    <td>${u.id}</td>
+                    <td><strong>${u.username}</strong></td>
+                    <td>${new Date(u.created_at).toLocaleString('zh-CN')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          ` : '<div class="empty">暂无用户</div>'}
+        </div>
+
+        <div class="section">
+          <div class="section-title">📋 任务列表</div>
+          ${data.tasks.length > 0 ? `
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>标题</th>
+                  <th>优先级</th>
+                  <th>状态</th>
+                  <th>截止日期</th>
+                  <th>创建时间</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.tasks.map(t => `
+                  <tr>
+                    <td>${t.id}</td>
+                    <td><strong>${t.title}</strong>${t.desc ? '<br><small style="color:#666">' + t.desc + '</small>' : ''}</td>
+                    <td><span class="badge ${t.priority === 'high' ? 'badge-danger' : t.priority === 'medium' ? 'badge-warning' : 'badge-success'}">${t.priority}</span></td>
+                    <td><span class="badge ${t.status === 'done' ? 'badge-success' : 'badge-info'}">${t.status}</span></td>
+                    <td>${t.due_date || '-'}</td>
+                    <td>${new Date(t.created_at).toLocaleString('zh-CN')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          ` : '<div class="empty">暂无任务</div>'}
+        </div>
+
+        <div class="section">
+          <div class="section-title">🏷️ 分类列表</div>
+          ${data.categories.length > 0 ? `
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>名称</th>
+                  <th>颜色</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.categories.map(c => `
+                  <tr>
+                    <td>${c.id}</td>
+                    <td><strong>${c.name}</strong></td>
+                    <td><span style="display:inline-block;width:20px;height:20px;background:${c.color};border-radius:4px;vertical-align:middle;margin-right:8px;"></span>${c.color}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          ` : '<div class="empty">暂无分类</div>'}
+        </div>
+      `;
+
+      content.innerHTML = html;
+    }
+
+    // 页面加载时自动获取数据
+    loadData();
+  </script>
+</body>
+</html>

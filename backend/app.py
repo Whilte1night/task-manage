@@ -130,7 +130,34 @@ def err(msg, code=400):
 # ==================== 健康检查 ====================
 @app.route('/api/health', methods=['GET'])
 def health():
-    return ok({'status': 'ok'})
+    try:
+        user_count = User.query.count()
+        return ok({'status': 'ok', 'users': user_count})
+    except Exception as e:
+        return ok({'status': 'ok', 'warning': 'database not initialized'})
+
+
+# ==================== 数据库查看接口（仅用于调试） ====================
+@app.route('/api/debug/database', methods=['GET'])
+def view_database():
+    """查看数据库所有数据（仅用于调试）"""
+    try:
+        users = User.query.all()
+        tasks = Task.query.all()
+        categories = Category.query.all()
+        
+        return ok({
+            'users': [{'id': u.id, 'username': u.username, 'created_at': u.created_at.isoformat()} for u in users],
+            'tasks': [t.to_dict() for t in tasks],
+            'categories': [c.to_dict() for c in categories],
+            'total': {
+                'users': len(users),
+                'tasks': len(tasks),
+                'categories': len(categories)
+            }
+        })
+    except Exception as e:
+        return err(f'Database error: {str(e)}', 500)
 
 
 # ==================== 认证接口 ====================
